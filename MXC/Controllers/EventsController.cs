@@ -2,11 +2,13 @@ using Microsoft.AspNetCore.Mvc;
 using MXC.Data;
 using MXC.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace MXC.Controllers
 {
     [ApiController]
     [Route("api")]
+    [Authorize]
     public class EventsController : ControllerBase
     {
         private readonly ILogger<EventsController> _logger;
