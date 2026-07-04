@@ -1,0 +1,6 @@
+@MXC_HostAddress = http://localhost:5131
+
+GET {{MXC_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
