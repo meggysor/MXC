@@ -1,51 +1,43 @@
 using Microsoft.AspNetCore.Mvc;
+using MXC.Data;
 using MXC.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace MXC.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api")]
     public class EventsController : ControllerBase
     {
-        private static readonly List<Event> _testEvents =
-        [
-            new Event
-            {
-                Id = Guid.NewGuid(),
-                Name = "Sample Event 1",
-                Location = "New York",
-                Country = "USA",
-                Capacity = 50
-            },
-            new Event
-            {
-                Id = Guid.NewGuid(),
-                Name = "Sample Event 2",
-                Location = "London",
-                Country = "UK",
-                Capacity = 75
-            }
-        ];
+        private readonly ILogger<EventsController> _logger;
+        private readonly ApplicationDbContext _dbContext;
+
+        public EventsController(ILogger<EventsController> logger, ApplicationDbContext dbContext)
+        {
+            _logger = logger;
+            _dbContext = dbContext;
+        }
 
         [HttpGet]
         [Route("GetAll")]
         public async Task<IActionResult> GetAll()
         {
-            await Task.Delay(1000); // Simulate some async work
+            var allEvents = await _dbContext.Events.ToListAsync();
 
-            return Ok(_testEvents);
+            return Ok(allEvents);
         }
 
         [HttpGet]
         [Route("GetById")]
         public async Task<IActionResult> GetById(Guid id)
         {
-            await Task.Delay(1000); // Simulate some async work
-
-            var record = _testEvents.FirstOrDefault(e => e.Id == id);
+            var record = await _dbContext.Events.FindAsync(id);
 
             if (record == null)
+            {
+                _logger.LogWarning("Event with ID {EventId} not found.", id);
                 return NotFound();
+            }
 
             return Ok(record);
         }
@@ -54,10 +46,21 @@ namespace MXC.Controllers
         [Route("Create")]
         public async Task<IActionResult> Create([FromBody] Event newEvent)
         {
-            await Task.Delay(1000); // Simulate some async work
+            if (newEvent == null)
+            {
+                _logger.LogWarning("Create request received with null event.");
+                return BadRequest("Event data is required.");
+            }
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Create request received with invalid model state.");
+                return BadRequest(ModelState);
+            }
 
-            newEvent.Id = Guid.NewGuid();
-            _testEvents.Add(newEvent);
+            _dbContext.Events.Add(newEvent);
+            await _dbContext.SaveChangesAsync();
+            _logger.LogInformation("Creating new event with ID {EventId}.", newEvent.Id);
+
             return CreatedAtAction(nameof(GetById), new { id = newEvent.Id }, newEvent);
         }
 
@@ -65,8 +68,18 @@ namespace MXC.Controllers
         [Route("Update")]
         public async Task<IActionResult> Update([FromBody] Event updatedEvent)
         {
-            await Task.Delay(1000); // Simulate some async work
-            var existingEvent = _testEvents.FirstOrDefault(e => e.Id == updatedEvent.Id);
+            if (updatedEvent == null)
+            {
+                _logger.LogWarning("Update request received with null event.");
+                return BadRequest("Event data is required.");
+            }
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Update request received with invalid model state.");
+                return BadRequest(ModelState);
+            }
+
+            var existingEvent = await _dbContext.Events.FindAsync(updatedEvent.Id);
 
             if (existingEvent == null)
                 return NotFound();
@@ -76,6 +89,9 @@ namespace MXC.Controllers
             existingEvent.Country = updatedEvent.Country;
             existingEvent.Capacity = updatedEvent.Capacity;
 
+            await _dbContext.SaveChangesAsync();
+            _logger.LogInformation("Updated event with ID {EventId}.", updatedEvent.Id);
+
             return NoContent();
         }
 
@@ -83,14 +99,16 @@ namespace MXC.Controllers
         [Route("Delete")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            await Task.Delay(1000); // Simulate some async work
+            var existingEvent = await _dbContext.Events.FindAsync(id);
 
-            var existingEvent = _testEvents.FirstOrDefault(e => e.Id == id);
             if (existingEvent == null)
                 return NotFound();
-            _testEvents.Remove(existingEvent);
 
-            return Ok();
+            _dbContext.Events.Remove(existingEvent);
+            await _dbContext.SaveChangesAsync();
+            _logger.LogInformation("Deleted event with ID {EventId}.", id);
+
+            return NoContent();
         }
     }
 }
