@@ -1,6 +1,6 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -15,7 +15,7 @@ import { Auth } from '../../services/auth';
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
+    ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
@@ -29,25 +29,33 @@ export class Login {
   private readonly auth = inject(Auth);
   private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly fb = inject(FormBuilder);
 
-  email = '';
-  password = '';
-  isLoading = false;
+  isLoading = signal(false);   // <-- signal lett
+
+  private readonly passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/;
+
+  loginForm = this.fb.group({
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.pattern(this.passwordPattern)]]
+  });
 
   onSubmit(): void {
-    if (!this.email || !this.password) {
+    if (this.loginForm.invalid) {
+      this.loginForm.markAllAsTouched();
       return;
     }
 
-    this.isLoading = true;
+    this.isLoading.set(true);
+    const { email, password } = this.loginForm.getRawValue();
 
-    this.auth.login({ email: this.email, passWord: this.password }).subscribe({
+    this.auth.login({ email: email!, passWord: password! }).subscribe({
       next: () => {
-        this.isLoading = false;
+        this.isLoading.set(false);
         this.router.navigate(['/events']);
       },
       error: () => {
-        this.isLoading = false;
+        this.isLoading.set(false);
         this.snackBar.open('Invalid email or password.', 'Close', { duration: 3000 });
       }
     });

@@ -8,6 +8,7 @@ import { LoginRequest, AuthResponse } from '../models/auth.model';
 export class Auth {
   private readonly http = inject(HttpClient);
   private readonly tokenKey = 'auth_token';
+  private readonly emailKey = 'auth_email';
 
   login(credentials: LoginRequest): Observable<AuthResponse> {
     return this.http
@@ -15,16 +16,22 @@ export class Auth {
       .pipe(
         tap(response => {
           localStorage.setItem(this.tokenKey, response.token);
+          localStorage.setItem(this.emailKey, response.email);
         })
       );
   }
 
   logout(): void {
     localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem(this.emailKey);
   }
 
   getToken(): string | null {
     return localStorage.getItem(this.tokenKey);
+  }
+
+  getEmail(): string | null {
+    return localStorage.getItem(this.emailKey);
   }
 
   isLoggedIn(): boolean {

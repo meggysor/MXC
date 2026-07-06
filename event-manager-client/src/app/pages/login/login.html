@@ -2,24 +2,36 @@
   <mat-card class="login-card">
     <mat-card-header>
       <mat-card-title>Event Manager</mat-card-title>
-      <mat-card-subtitle>Kérem jelentkezzen be</mat-card-subtitle>
+      <mat-card-subtitle>Please sign in</mat-card-subtitle>
     </mat-card-header>
 
     <mat-card-content>
-      <form (ngSubmit)="onSubmit()">
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Email</mat-label>
-          <input matInput type="email" [(ngModel)]="email" name="email" required>
+          <input matInput type="email" formControlName="email">
+          <mat-error *ngIf="loginForm.get('email')?.hasError('required')">
+            Email is required.
+          </mat-error>
+          <mat-error *ngIf="loginForm.get('email')?.hasError('email')">
+            Please enter a valid email address.
+          </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Jelszó</mat-label>
-          <input matInput type="password" [(ngModel)]="password" name="password" required>
+          <mat-label>Password</mat-label>
+          <input matInput type="password" formControlName="password">
+          <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
+            Password is required.
+          </mat-error>
+          <mat-error *ngIf="loginForm.get('password')?.hasError('pattern')">
+            Password must contain at least one lowercase letter, one uppercase letter, and one digit.
+          </mat-error>
         </mat-form-field>
 
-        <button mat-raised-button color="primary" type="submit" class="full-width" [disabled]="isLoading">
-          <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
-          <span *ngIf="!isLoading">Bejelentkezés</span>
+        <button mat-raised-button color="primary" type="submit" class="full-width" [disabled]="isLoading()">
+            <mat-spinner *ngIf="isLoading()" diameter="20"></mat-spinner>
+            <span *ngIf="!isLoading()">Sign In</span>
         </button>
       </form>
     </mat-card-content>

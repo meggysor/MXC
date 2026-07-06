@@ -1,0 +1,41 @@
+<app-header></app-header>
+
+<div class="form-container">
+  <h1>{{ isEditMode() ? 'Edit event' : 'New event' }}</h1>
+
+  <div *ngIf="isLoading()" class="loading-overlay">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <form #eventForm="ngForm" (ngSubmit)="onSubmit(eventForm)" *ngIf="!isLoading()">
+
+    <div class="field-group">
+      <label for="name">Name</label>
+      <input id="name" name="name" [(ngModel)]="event.name" required class="custom-input">
+    </div>
+
+    <h3 class="section-label">PLACE</h3>
+
+    <div class="field-group">
+      <label for="location">City</label>
+      <input id="location" name="location" [(ngModel)]="event.location" required maxlength="100" class="custom-input">
+    </div>
+
+    <div class="field-group">
+      <label for="country">Country</label>
+      <input id="country" name="country" [(ngModel)]="event.country" class="custom-input">
+    </div>
+
+    <div class="field-group capacity-field">
+      <label for="capacity">Capacity</label>
+      <input id="capacity" name="capacity" type="number" [(ngModel)]="event.capacity" min="1" class="custom-input">
+    </div>
+
+    <div class="form-actions">
+      <button mat-button type="button" (click)="onCancel()">Cancel</button>
+      <button mat-raised-button color="primary" type="submit" [disabled]="eventForm.invalid">
+        {{ isEditMode() ? 'Save' : 'Add event' }}
+      </button>
+    </div>
+  </form>
+</div>
