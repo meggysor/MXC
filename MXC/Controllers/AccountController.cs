@@ -47,11 +47,11 @@ namespace MXC.Controllers
                 return Unauthorized("Invalid email or password.");
             }
 
-            var authResponse = new AuthResponse
-            {
-                Token = GenerateJwtToken(user),
-                Email = loginModel.Email
-            };
+            AuthResponse authResponse = new
+            (
+                Token: GenerateJwtToken(user),
+                Email: loginModel.Email
+            );
 
             _logger.LogInformation("User {Email} logged in successfully.", loginModel.Email);
             return Ok(authResponse);
